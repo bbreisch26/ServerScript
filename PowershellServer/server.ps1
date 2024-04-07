@@ -6,13 +6,16 @@ Start-Process powershell -Verb runAs -ArgumentList $arguments
 Break
 }
 
-
-cd $env:USERPROFILE
-New-Item -ItemType directory -Path '\Desktop\PowershellServer\WindowsServer2016'
+#Apply LGPO policy object
+#New-Item -ItemType directory -Path '$env:USERPROFILE\Desktop\PowershellServer\WindowsServer2016'
 Copy-Item -Path "$env:USERPROFILE\Desktop\PowershellServer\LGPO.exe" -Destination "C:\Windows\System32"
 lgpo /g "$env:USERPROFILE\Desktop\PowershellServer\WindowsServer2016"
+
+#automatic updates
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update" /v AUOptions /t REG_DWORD /d 4 /f
+
 Get-WmiObject win32_useraccount | Foreach-Object {
-([adsi](“WinNT://”+$_.caption).replace(“\”,”/”)).SetPassword(“Cyb3rPatriot1!”)
+([adsi](“WinNT://”+$_.caption).replace(“\”,”/”)).SetPassword(“BlasterR0x123!”)
 }
 ECHO "Disabled Users:"
 Get-WmiObject -class Win32_UserAccount -Filter "Disabled='True'"
@@ -28,14 +31,14 @@ cd C:\
 Get-ChildItem -Path C:\Users\ -Include *.mp3, *.mp4, *.txt, *.jpeg, *.png, *.tiff, *.bmp, *.wav, *.avi, *.mov, *.pdf, *.doc, *.docx, *.csv, *.ppt, *.pptx, *.gif -File -Recurse -ErrorAction SilentlyContinue
  
 $remotedesktop = Read-Host 'Do you want to disable remote desktop?'
-if($remotedesktop.ToUpper() == 'Y') {
+if($remotedesktop.ToUpper() -eq'Y') {
     Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" –Value 1
     }
 else {
     Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" –Value 0
     Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
 }
-$vendors = @("Apple Inc.", )
+$vendors = @("Apple Inc.")
 foreach($vendor in $vendors){
     $app = Get-WmiObject -Class Win32_Product | Where-Object {
         $_.Vendor -match "$vendor"
@@ -72,11 +75,12 @@ Set-Service -Name RemoteAccess -Status Stopped -StartupType Disabled
 Set-Service -Name lanmanserver -Status Stopped -StartupType Disabled
 Set-Service -Name simptcp -Status Stopped -StartupType Disabled
 Set-Service -Name SNMP -Status Stopped -StartupType Disabled
+Set-Service -Name NetTcpPortSharing -Status Stopped -StartupType Disabled
 Set-Service -Name SSDPSRV -Status Stopped -StartupType Disabled
 Set-Service -Name upnphost -Status Stopped -StartupType Disabled
 Set-Service -Name WMSvc -Status Stopped -StartupType Disabled
 Set-Service -Name WerSvc -Status Stopped -StartupType Disabled
-Set-Service -Name Wecsvc-Status Stopped -StartupType Disabled
+Set-Service -Name Wecsvc-Status -Status Stopped -StartupType Disabled
 Set-Service -Name WMPNetworkSvc -Status Stopped -StartupType Disabled
 Set-Service -Name icssvc -Status Stopped -StartupType Disabled
 Set-Service -Name WpnService -Status Stopped -StartupType Disabled
@@ -102,7 +106,7 @@ Disable-WindowsOptionalFeature -Online -FeatureName NetTcpPortSharing
 # Disable-WindowsOptionalFeature -Online -FeatureName IIS-FTPExtensibility
 Disable-WindowsOptionalFeature -Online -FeatureName WindowsMediaPlayer
 Set-MpPreference -DisableRealtimeMonitoring $false
-Set-NetFirewallProfile -Enabled $true
+Set-NetFirewallProfile -Enabled True
 # Enable IE ESC
 $AdminKey = "HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A7-37EF-4b3f-8CFC-4F3A74704073}"
 $UserKey = "HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A8-37EF-4b3f-8CFC-4F3A74704073}"
